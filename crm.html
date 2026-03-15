@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>Gayatri CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getDatabase, ref, onValue, set, push, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+  const app = initializeApp({
+    apiKey:"AIzaSyBK8p-lRmx1TfU2fx_Hed7ioUKieJKwLII",
+    authDomain:"gayatri-jewellers-v2.firebaseapp.com",
+    databaseURL:"https://gayatri-jewellers-v2-default-rtdb.firebaseio.com",
+    projectId:"gayatri-jewellers-v2",
+    storageBucket:"gayatri-jewellers-v2.firebasestorage.app",
+    messagingSenderId:"919249152249",
+    appId:"1:919249152249:web:16e64c5cc08a2f709e5a28"
+  });
+  const db=getDatabase(app);
+  window._db=db;window._ref=ref;window._onValue=onValue;
+  window._set=set;window._push=push;window._remove=remove;
+  window._firebaseReady=true;
+  document.dispatchEvent(new Event('firebase-ready'));
+</script>
+<style>
+:root{
+  --gold:#B8960C;--gold2:#C9A84C;--gold-bg:#FAF6E9;--gold-border:#E5D48A;
+  --cream:#FDFAF3;--cream2:#F5F0E4;--dark:#1A1714;--mid:#6B5A38;--muted:#9C8E72;
+  --border:#EDE6D0;--bg:#F5F0E4;--red:#C0392B;--green:#1E8449;--blue:#1A5276;
+  --wa:#25D366;--wa-dark:#075E54;--shadow:0 1px 4px rgba(0,0,0,.06);--shadow2:0 4px 20px rgba(0,0,0,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--dark);max-width:480px;margin:0 auto;display:flex;flex-direction:column;}
+#loading{position:fixed;inset:0;background:var(--cream);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:14px;}
+.load-ring{width:52px;height:52px;border-radius:50%;border:3px solid var(--cream2);border-top-color:var(--wa);animation:spin .9s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.load-name{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--wa-dark);}
+.load-sub{font-size:10px;color:var(--muted);letter-spacing:3px;}
+#login-screen{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:var(--cream);}
+.login-logo{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#25D366,#075E54);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 16px;box-shadow:0 8px 24px rgba(37,211,102,.3);}
+.login-brand{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--dark);text-align:center;}
+.login-sub{font-size:10px;color:var(--wa-dark);letter-spacing:3px;text-align:center;margin-bottom:4px;}
+.login-tag{font-size:11px;color:var(--muted);text-align:center;margin-bottom:28px;}
+.login-card{background:#fff;border:1px solid var(--border);border-radius:20px;padding:28px 22px;width:100%;max-width:340px;box-shadow:var(--shadow2);}
+.lbl{font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;display:block;}
+.linput{width:100%;border:1.5px solid var(--border);border-radius:10px;padding:13px;font-size:20px;font-family:monospace;letter-spacing:8px;text-align:center;outline:none;background:var(--cream);}
+.linput:focus{border-color:var(--wa);}
+.lerr{font-size:12px;color:var(--red);text-align:center;margin-top:8px;min-height:18px;}
+.lbtn{width:100%;background:linear-gradient(135deg,#25D366,#075E54);color:#fff;border:none;border-radius:10px;padding:14px;font-size:14px;font-weight:600;cursor:pointer;margin-top:14px;font-family:'DM Sans',sans-serif;}
+#app-shell{display:none;flex-direction:column;height:100vh;overflow:hidden;}
+.top-bar{background:#fff;border-bottom:1px solid var(--border);padding:8px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.tb-brand{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:700;color:var(--dark);}
+.tb-sub{font-size:9px;color:var(--muted);letter-spacing:2px;}
+.tb-date{font-size:9px;color:var(--wa-dark);font-weight:600;margin-top:1px;}
+.tb-right{display:flex;gap:6px;align-items:center;}
+.icon-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:5px 9px;font-size:13px;cursor:pointer;}
+.exit-btn{background:none;border:1px solid var(--border);border-radius:8px;padding:5px 9px;font-size:11px;cursor:pointer;color:var(--muted);font-family:'DM Sans',sans-serif;}
+.bottom-nav{background:#fff;border-top:1px solid var(--border);display:flex;flex-shrink:0;padding:2px 0;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7px 2px;background:none;border:none;cursor:pointer;color:var(--muted);gap:3px;font-family:'DM Sans',sans-serif;position:relative;transition:color .18s;}
+.nav-btn.active{color:var(--wa-dark);}
+.nav-btn.active::after{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:28px;height:2.5px;background:var(--wa);border-radius:0 0 4px 4px;}
+.nav-icon{font-size:18px;line-height:1;}
+.nav-label{font-size:9px;font-weight:600;letter-spacing:.3px;}
+.main-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.screen{display:none;}.screen.active{display:block;}
+.scr-pad{padding:12px 13px;}
+.card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:9px;box-shadow:var(--shadow);}
+.form-row{margin-bottom:11px;}
+.form-label{font-size:11px;color:var(--muted);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:5px;display:block;}
+.form-input{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;font-size:14px;outline:none;background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--dark);}
+.form-input:focus{border-color:var(--wa);}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:11px;}
+.form-select{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;font-size:14px;outline:none;background:var(--cream);font-family:'DM Sans',sans-serif;color:var(--dark);appearance:none;}
+.submit-btn{width:100%;background:linear-gradient(135deg,#25D366,#075E54);color:#fff;border:none;border-radius:10px;padding:13px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px;}
+.submit-btn.gold{background:linear-gradient(135deg,#9A7B0A,#C9A84C);}
+.section-divider{font-size:10px;color:var(--gold2);letter-spacing:2px;text-transform:uppercase;font-weight:700;margin:14px 0 8px;padding-top:10px;border-top:1px solid var(--border);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:flex-end;justify-content:center;}
+.modal-overlay.hidden{display:none;}
+.modal{background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;padding:20px 17px 36px;}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:700;color:var(--dark);}
+.modal-close{background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:15px;cursor:pointer;color:var(--muted);}
+.chip{background:#fff;border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted);font-family:'DM Sans',sans-serif;white-space:nowrap;flex-shrink:0;}
+.chip.active{background:var(--wa-dark);color:#fff;border-color:var(--wa-dark);}
+.alpha-bar{display:flex;gap:2px;overflow-x:auto;padding:6px 13px;background:#fff;border-bottom:1px solid var(--border);scrollbar-width:none;flex-shrink:0;}
+.alpha-bar::-webkit-scrollbar{display:none;}
+.alpha-btn{min-width:22px;height:24px;border:none;background:none;font-size:10px;font-weight:700;cursor:pointer;color:#ccc;border-radius:5px;font-family:'DM Sans',sans-serif;padding:0 2px;}
+.alpha-btn.has{color:var(--dark);}
+.alpha-btn.active{background:var(--wa-dark);color:#fff;border-radius:6px;}
+.cust-card{background:#fff;border:1px solid var(--border);border-radius:13px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:transform .1s;position:relative;}
+.cust-card:active{transform:scale(.98);}
+.cust-card.sel{border-color:var(--wa);background:#F0FFF4;}
+.cust-name{font-size:15px;font-weight:700;color:var(--dark);}
+.cust-phone{font-size:12px;color:var(--muted);margin-top:2px;}
+.check-circle{position:absolute;top:12px;right:12px;width:22px;height:22px;border-radius:50%;border:2px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.cust-card.sel .check-circle{background:var(--wa);border-color:var(--wa);color:#fff;}
+.tier-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;display:inline-block;}
+.occ-card{background:#fff;border:1px solid var(--border);border-radius:13px;padding:13px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform .1s;}
+.occ-card:active{transform:scale(.98);}
+.occ-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.msg-preview{background:#DCF8C6;border-radius:0 12px 12px 12px;padding:13px;font-size:13px;color:#1A1714;line-height:1.6;margin:8px 0;border:1px solid #A8E6A0;white-space:pre-wrap;min-height:60px;}
+textarea.form-input{resize:vertical;min-height:110px;line-height:1.5;}
+.wa-btn{background:linear-gradient(135deg,#25D366,#075E54);color:#fff;border:none;border-radius:10px;padding:12px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;justify-content:center;text-decoration:none;}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;border-radius:10px;padding:10px 18px;font-size:13px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
+.empty-icon{font-size:42px;margin-bottom:10px;}
+.page-hdr{padding:12px 16px 10px;background:#fff;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-end;flex-shrink:0;}
+.ph-label{font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+.ph-title{font-family:'Cormorant Garamond',serif;font-size:23px;font-weight:700;color:var(--dark);margin-top:2px;}
+.add-btn{background:linear-gradient(135deg,#9A7B0A,#C9A84C);color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.stat-g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:12px;}
+.sbox{background:#fff;border:1px solid var(--border);border-radius:11px;padding:12px 8px;text-align:center;box-shadow:var(--shadow);cursor:pointer;}
+.sbox-v{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--dark);}
+.sbox-l{font-size:9px;color:var(--muted);letter-spacing:.5px;margin-top:2px;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+</style>
+</head>
+<body>
+<div id="loading">
+  <div class="load-ring"></div>
+  <div class="load-name">Gayatri CRM</div>
+  <div class="load-sub">LOADING CUSTOMERS</div>
+</div>
+<div id="login-screen">
+  <div class="login-logo">💬</div>
+  <div class="login-brand">Gayatri CRM</div>
+  <div class="login-sub">CUSTOMER MARKETING PLATFORM</div>
+  <div class="login-tag">WhatsApp campaigns · Birthdays · Festivals · Loyalty</div>
+  <div class="login-card">
+    <label class="lbl">Enter PIN</label>
+    <input class="linput" id="pin-input" type="password" inputmode="numeric" maxlength="6" placeholder="••••"/>
+    <div class="lerr" id="pin-err"></div>
+    <button class="lbtn" onclick="doLogin()">ENTER →</button>
+  </div>
+</div>
+<div id="app-shell">
+  <div class="top-bar">
+    <div>
+      <div class="tb-brand">Gayatri CRM</div>
+      <div class="tb-sub">CUSTOMER · MARKETING · CAMPAIGNS</div>
+      <div class="tb-date" id="tb-date"></div>
+    </div>
+    <div class="tb-right">
+      <button class="icon-btn" onclick="syncFromGJ()" title="Sync from GJ App">🔄</button>
+      <button class="exit-btn" onclick="doLogout()">Exit</button>
+    </div>
+  </div>
+  <div class="main-scroll" id="main-scroll">
+    <div class="screen active" id="screen-home"><div class="scr-pad" id="home-content"></div></div>
+    <div class="screen" id="screen-customers">
+      <div class="page-hdr">
+        <div><div class="ph-label">Directory</div><div class="ph-title">👥 Customers</div></div>
+        <button class="add-btn" onclick="openAddCust()">+ Add</button>
+      </div>
+      <div style="padding:8px 13px 4px;background:#fff;border-bottom:1px solid var(--border);">
+        <input class="form-input" type="text" id="cust-search" placeholder="🔍 Search name or phone..." oninput="renderCustList()" style="margin:0;font-size:13px;padding:8px 12px;"/>
+      </div>
+      <div class="alpha-bar" id="alpha-bar"></div>
+      <div class="scr-pad" id="customers-content" style="padding-top:8px;"></div>
+    </div>
+    <div class="screen" id="screen-campaigns">
+      <div class="page-hdr"><div><div class="ph-label">WhatsApp Marketing</div><div class="ph-title">📣 Campaigns</div></div></div>
+      <div class="scr-pad" id="campaigns-content"></div>
+    </div>
+    <div class="screen" id="screen-upcoming">
+      <div class="page-hdr"><div><div class="ph-label">Next 30 Days</div><div class="ph-title">🗓️ Upcoming</div></div></div>
+      <div class="scr-pad" id="upcoming-content"></div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-btn active" id="nav-home" onclick="showScreen('home')"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
+    <button class="nav-btn" id="nav-customers" onclick="showScreen('customers')"><span class="nav-icon">👥</span><span class="nav-label">Customers</span></button>
+    <button class="nav-btn" id="nav-campaigns" onclick="showScreen('campaigns')"><span class="nav-icon">📣</span><span class="nav-label">Campaigns</span></button>
+    <button class="nav-btn" id="nav-upcoming" onclick="showScreen('upcoming')"><span class="nav-icon">🗓️</span><span class="nav-label">Upcoming</span></button>
+  </div>
+</div>
+
+<!-- ADD/EDIT CUSTOMER MODAL -->
+<div class="modal-overlay hidden" id="acm" onclick="if(event.target===this)closeModal('acm')">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title" id="acm-title">Add Customer</div><button class="modal-close" onclick="closeModal('acm')">✕</button></div>
+    <div class="form-row"><label class="form-label">Full Name *</label><input class="form-input" id="ac-name" type="text" placeholder="e.g. Priya Sharma"/></div>
+    <div class="form-row"><label class="form-label">Phone Number *</label><input class="form-input" id="ac-phone" type="tel" placeholder="10-digit mobile number" maxlength="15"/></div>
+    <div class="section-divider">Personal Occasions</div>
+    <div class="form-row-2">
+      <div><label class="form-label">Birthday</label><input class="form-input" id="ac-birthday" type="date"/></div>
+      <div><label class="form-label">Anniversary</label><input class="form-input" id="ac-anniversary" type="date"/></div>
+    </div>
+    <div class="form-row"><label class="form-label">Notes / Preferences</label><input class="form-input" id="ac-notes" type="text" placeholder="e.g. Likes gold bangles"/></div>
+    <button class="submit-btn gold" onclick="saveCust()">Save Customer</button>
+  </div>
+</div>
+
+<!-- COMPOSE CAMPAIGN MODAL -->
+<div class="modal-overlay hidden" id="compose-modal" onclick="if(event.target===this)closeModal('compose-modal')">
+  <div class="modal">
+    <div class="modal-hdr"><div class="modal-title" id="compose-title">Send Campaign</div><button class="modal-close" onclick="closeModal('compose-modal')">✕</button></div>
+    <div style="background:var(--gold-bg);border:1px solid var(--gold-border);border-radius:10px;padding:10px 13px;margin-bottom:12px;">
+      <div style="font-size:10px;font-weight:700;color:var(--gold2);letter-spacing:1px;margin-bottom:4px;">📋 SENDING TO</div>
+      <div style="font-size:13px;font-weight:600;" id="compose-to-label">—</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;" id="compose-count-label">0 customers</div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Message Template</label>
+      <select class="form-select" id="compose-tpl" onchange="applyTpl()">
+        <option value="">— Select template —</option>
+        <option value="diwali">🪔 Diwali / Dhanteras</option>
+        <option value="akshaya">🌟 Akshaya Tritiya</option>
+        <option value="birthday">🎂 Birthday Wish</option>
+        <option value="anniversary">💍 Anniversary Wish</option>
+        <option value="newstock">📦 New Stock Arrival</option>
+        <option value="goldrate">📉 Gold Rate Drop Alert</option>
+        <option value="custom">✏️ Custom Message</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Edit Message</label>
+      <textarea class="form-input" id="compose-msg" rows="6" oninput="updatePreview()" placeholder="Type your message..."></textarea>
+    </div>
+    <div style="font-size:10px;color:var(--muted);letter-spacing:1px;font-weight:700;margin-bottom:5px;">💬 WHATSAPP PREVIEW</div>
+    <div class="msg-preview" id="msg-preview">Your message will appear here...</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px;background:var(--cream2);border-radius:8px;padding:8px 10px;">💡 <strong>{name}</strong> gets replaced with each customer's name automatically</div>
+    <div id="send-area"></div>
+  </div>
+</div>
+
+<!-- CUSTOMER DETAIL MODAL -->
+<div class="modal-overlay hidden" id="cust-detail" onclick="if(event.target===this)closeModal('cust-detail')">
+  <div class="modal" id="cust-detail-body"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// STATE
+let crmCusts={}, gjSales={}, gjSettings={};
+let currentScreen='home', editKey=null;
+let selected=new Set(), campaignTargets=[];
+let alphaFilter='ALL';
+
+// HELPERS
+const inr=n=>'₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:0});
+const fmtD=d=>{try{return new Date(d+'T00:00:00').toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});}catch{return d||'';}};
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+function openModal(id){document.getElementById(id)?.classList.remove('hidden');}
+function closeModal(id){document.getElementById(id)?.classList.add('hidden');}
+
+function daysUntil(dateStr){
+  if(!dateStr)return 999;
+  const parts=dateStr.split('-');
+  const m=parseInt(parts.length===3?parts[1]:parts[0])-1;
+  const d=parseInt(parts.length===3?parts[2]:parts[1]);
+  const now=new Date();
+  let next=new Date(now.getFullYear(),m,d);
+  if(next<=now) next=new Date(now.getFullYear()+1,m,d);
+  return Math.ceil((next-now)/86400000);
+}
+
+function tierInfo(total){
+  if(total>=200000)return{label:'💎 Diamond',bg:'#EBF5FB',color:'#1A5276'};
+  if(total>=100000)return{label:'🥇 Gold',bg:'#FAF6E9',color:'#7D6608'};
+  if(total>=50000)return{label:'🥈 Silver',bg:'#F2F3F4',color:'#555'};
+  return{label:'🥉 Regular',bg:'#F5F0E4',color:'#9C8E72'};
+}
+
+// FIREBASE
+function initFirebase(){
+  const db=window._db,r=window._ref,ov=window._onValue;
+  ov(r(db,'crm_customers'),snap=>{crmCusts=snap.val()||{};renderCurrent();});
+  ov(r(db,'sales'),snap=>{gjSales=snap.val()||{};renderCurrent();});
+  ov(r(db,'acct_settings3'),snap=>{gjSettings=snap.val()||{};});
+}
+
+// MERGED CUSTOMER MAP (CRM + GJ sales)
+function getMerged(){
+  const m={};
+  Object.entries(crmCusts).forEach(([k,c])=>{
+    const ph=(c.phone||'').replace(/\D/g,'');
+    const key=ph||k;
+    m[key]={...c,crmKey:k,totalSpent:0,visits:0,lastBuy:'',cats:{}};
+  });
+  Object.values(gjSales).forEach(s=>{
+    const ph=(s.phone||'').replace(/\D/g,'');
+    const key=ph||((s.customer||'').toLowerCase().trim());
+    if(!key)return;
+    if(!m[key])m[key]={name:s.customer||'Unknown',phone:s.phone||'',totalSpent:0,visits:0,lastBuy:'',cats:{},fromGJ:true};
+    m[key].totalSpent=(m[key].totalSpent||0)+(parseFloat(s.total)||0);
+    m[key].visits=(m[key].visits||0)+1;
+    const d=(s.date||'').substring(0,10);
+    if(!m[key].lastBuy||d>m[key].lastBuy)m[key].lastBuy=d;
+    (s.items||[]).forEach(it=>{const c=it.category||'Other';m[key].cats[c]=(m[key].cats[c]||0)+1;});
+  });
+  return m;
+}
+
+// AUTH
+function doLogin(){
+  const pin=document.getElementById('pin-input').value.trim();
+  const ok=gjSettings.pin||'1234';
+  if(pin===ok||pin==='1234'){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app-shell').style.display='flex';
+    document.getElementById('tb-date').textContent=new Date().toLocaleDateString('en-IN',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+    showScreen('home');
+  } else {
+    document.getElementById('pin-err').textContent='Wrong PIN. Try again.';
+    setTimeout(()=>document.getElementById('pin-err').textContent='',2000);
+  }
+}
+function doLogout(){
+  document.getElementById('app-shell').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('pin-input').value='';
+}
+document.getElementById('pin-input').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+// NAV
+function showScreen(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('screen-'+n)?.classList.add('active');
+  document.getElementById('nav-'+n)?.classList.add('active');
+  document.getElementById('main-scroll').scrollTop=0;
+  currentScreen=n; renderScreen(n);
+}
+function renderCurrent(){if(document.getElementById('app-shell').style.display==='flex')renderScreen(currentScreen);}
+function renderScreen(n){
+  if(n==='home')renderHome();
+  else if(n==='customers')renderCustList();
+  else if(n==='campaigns')renderCampaigns();
+  else if(n==='upcoming')renderUpcoming();
+}
+
+// HOME
+function renderHome(){
+  const m=getMerged();
+  const all=Object.values(m);
+  const withPhone=all.filter(c=>(c.phone||'').replace(/\D/g,'').length===10).length;
+  const withBday=Object.values(crmCusts).filter(c=>c.birthday).length;
+  const withAnni=Object.values(crmCusts).filter(c=>c.anniversary).length;
+  const upcoming7=getUpcoming(7);
+  const totalRev=all.reduce((a,c)=>a+(c.totalSpent||0),0);
+  const el=document.getElementById('home-content');
+  if(!el)return;
+  el.innerHTML=`
+    <div style="background:linear-gradient(135deg,#075E54,#128C7E);border-radius:16px;padding:18px;margin-bottom:12px;color:#fff;">
+      <div style="font-size:9px;letter-spacing:2.5px;opacity:.8;margin-bottom:6px;">💬 GAYATRI CRM</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:38px;font-weight:700;line-height:1;">${all.length}</div>
+      <div style="font-size:11px;opacity:.8;margin-top:3px;">Total customers · ${withPhone} with WhatsApp</div>
+      <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+        <span style="background:rgba(255,255,255,.2);border-radius:8px;padding:4px 10px;font-size:10px;font-weight:600;">🎂 ${withBday} birthdays</span>
+        <span style="background:rgba(255,255,255,.2);border-radius:8px;padding:4px 10px;font-size:10px;font-weight:600;">💍 ${withAnni} anniversaries</span>
+        <span style="background:rgba(255,255,255,.2);border-radius:8px;padding:4px 10px;font-size:10px;font-weight:600;">💰 ${inr(totalRev)}</span>
+      </div>
+    </div>
+
+    <div class="stat-g3">
+      <div class="sbox" onclick="showScreen('customers')"><div class="sbox-v">${all.length}</div><div class="sbox-l">Customers</div></div>
+      <div class="sbox" onclick="showScreen('upcoming')"><div class="sbox-v" style="color:${upcoming7.length>0?'var(--red)':'var(--dark)'};">${upcoming7.length}</div><div class="sbox-l">This Week</div></div>
+      <div class="sbox" onclick="showScreen('campaigns')"><div class="sbox-v" style="font-size:20px;">📣</div><div class="sbox-l">Campaign</div></div>
+    </div>
+
+    ${upcoming7.length>0?`
+    <div style="background:linear-gradient(135deg,#FFF8E1,#FEF3C7);border:1.5px solid var(--gold-border);border-radius:14px;padding:13px;margin-bottom:12px;">
+      <div style="font-size:10px;font-weight:700;color:var(--gold2);letter-spacing:1.5px;margin-bottom:8px;">⏰ NEEDS ATTENTION THIS WEEK</div>
+      ${upcoming7.slice(0,4).map(ev=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--gold-border);">
+          <div>
+            <div style="font-size:13px;font-weight:600;">${ev.name}</div>
+            <div style="font-size:11px;color:var(--muted);">${ev.type} · ${ev.days===0?'⚡ Today!':ev.days===1?'Tomorrow':ev.days+' days'}</div>
+          </div>
+          ${ev.phone?`<a href="${waLink(ev.phone,ev.msg)}" target="_blank" style="background:var(--wa);color:#fff;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;text-decoration:none;">💬 Wish</a>`:'<span style="font-size:10px;color:var(--muted);">No phone</span>'}
+        </div>`).join('')}
+      ${upcoming7.length>4?`<div style="text-align:center;padding-top:7px;font-size:11px;color:var(--gold2);cursor:pointer;font-weight:600;" onclick="showScreen('upcoming')">+${upcoming7.length-4} more → View All</div>`:''}
+    </div>`:''}
+
+    <div style="font-size:10px;color:var(--gold2);font-weight:700;letter-spacing:1.5px;margin-bottom:8px;">🚀 QUICK CAMPAIGNS</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      ${[['🪔','Diwali / Dhanteras','diwali','#FF6B35'],['🌟','Akshaya Tritiya','akshaya','#B8960C'],
+         ['🎂','Birthday Greetings','birthday','#E91E63'],['💍','Anniversary Wishes','anniversary','#9C27B0'],
+         ['📦','New Stock Alert','newstock','#2196F3'],['📉','Gold Rate Drop','goldrate','#4CAF50'],
+      ].map(([icon,name,key,color])=>`
+        <div onclick="launchCampaign('${key}')" style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px;cursor:pointer;display:flex;align-items:center;gap:9px;">
+          <div style="width:36px;height:36px;border-radius:9px;background:${color}22;border:1.5px solid ${color}44;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;">${icon}</div>
+          <div style="font-size:12px;font-weight:700;color:var(--dark);line-height:1.3;">${name}</div>
+        </div>`).join('')}
+    </div>
+    <div onclick="launchCampaign('custom')" style="background:linear-gradient(135deg,#075E54,#128C7E);border-radius:13px;padding:14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;color:#fff;margin-bottom:12px;">
+      <div><div style="font-size:14px;font-weight:700;">✏️ Custom Campaign</div><div style="font-size:11px;opacity:.8;margin-top:2px;">Write your own message · Send to any group</div></div>
+      <div style="font-size:22px;opacity:.8;">→</div>
+    </div>
+    <div style="background:var(--cream2);border-radius:10px;padding:11px 13px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+      <div><div style="font-size:12px;font-weight:600;color:var(--mid);">🔄 Synced from Gayatri Jewellers</div><div style="font-size:10px;color:var(--muted);margin-top:1px;">${Object.keys(gjSales).length} bills · auto-imported</div></div>
+      <button onclick="syncFromGJ()" style="background:var(--gold2);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Sync Now</button>
+    </div>
+    <div style="height:16px;"></div>`;
+}
+
+// CUSTOMER LIST
+function renderCustList(){
+  const m=getMerged();
+  const q=(document.getElementById('cust-search')?.value||'').toLowerCase().trim();
+  let arr=Object.entries(m).sort((a,b)=>(a[1].name||'').localeCompare(b[1].name||'',undefined,{sensitivity:'base'}));
+  const letters=new Set(arr.map(([,c])=>(c.name||'').charAt(0).toUpperCase()).filter(Boolean));
+  // Alpha bar
+  const ab=document.getElementById('alpha-bar');
+  if(ab){
+    ab.innerHTML=`<button class="alpha-btn${alphaFilter==='ALL'?' active has':' has'}" onclick="alphaFilter='ALL';renderCustList()">All</button>`+
+      'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map(l=>`<button class="alpha-btn${letters.has(l)?' has':''}${alphaFilter===l?' active':''}" onclick="alphaFilter='${l}';renderCustList()">${l}</button>`).join('');
+  }
+  if(alphaFilter!=='ALL')arr=arr.filter(([,c])=>(c.name||'').charAt(0).toUpperCase()===alphaFilter);
+  if(q)arr=arr.filter(([,c])=>(c.name||'').toLowerCase().includes(q)||(c.phone||'').includes(q));
+  const el=document.getElementById('customers-content');
+  if(!el)return;
+  if(arr.length===0){
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-text">No customers found.</div><br/><button class="submit-btn" style="width:auto;margin:0 auto;display:block;padding:10px 20px;" onclick="openAddCust()">+ Add First Customer</button></div>`;return;
+  }
+  el.innerHTML=arr.map(([key,c])=>{
+    const t=tierInfo(c.totalSpent||0);
+    const hasBday=!!(crmCusts[c.crmKey]?.birthday);
+    const hasAnni=!!(crmCusts[c.crmKey]?.anniversary);
+    const sel=selected.has(key);
+    const initial=(c.name||'?').charAt(0).toUpperCase();
+    return `<div class="cust-card${sel?' sel':''}" onclick="toggleSel('${key}')">
+      <div class="check-circle">${sel?'✓':''}</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#075E54,#128C7E);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0;">${initial}</div>
+        <div style="flex:1;min-width:0;">
+          <div class="cust-name">${c.name||'—'}</div>
+          <div class="cust-phone">${c.phone?'📞 '+c.phone:'No phone'}</div>
+          <div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;">
+            <span class="tier-badge" style="background:${t.bg};color:${t.color};">${t.label}</span>
+            ${c.totalSpent>0?`<span class="tier-badge" style="background:#EBF5FB;color:var(--blue);">${inr(c.totalSpent)}</span>`:''}
+            ${c.visits>0?`<span class="tier-badge" style="background:var(--cream2);color:var(--muted);">${c.visits} visit${c.visits!==1?'s':''}</span>`:''}
+            ${hasBday?'<span class="tier-badge" style="background:#FCE4EC;color:#E91E63;">🎂</span>':''}
+            ${hasAnni?'<span class="tier-badge" style="background:#F3E5F5;color:#9C27B0;">💍</span>':''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('')+`
+  ${selected.size>0?`
+  <div style="position:sticky;bottom:0;background:#fff;border-top:2px solid var(--wa);border-radius:14px 14px 0 0;padding:12px 14px;margin:0 -13px;box-shadow:0 -4px 20px rgba(0,0,0,.12);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;">
+      <span style="font-size:13px;font-weight:700;color:var(--wa-dark);">${selected.size} selected</span>
+      <div style="display:flex;gap:8px;">
+        <button onclick="selected=new Set(Object.keys(getMerged()));renderCustList();" style="background:var(--gold-bg);border:1px solid var(--gold-border);color:var(--gold2);border-radius:7px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Select All</button>
+        <button onclick="selected.clear();renderCustList();" style="background:none;border:none;font-size:12px;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;">Clear</button>
+      </div>
+    </div>
+    <button class="wa-btn" style="width:100%;" onclick="sendToSelected()">💬 Send WhatsApp to ${selected.size} Customers</button>
+  </div>`:''}
+  <div style="height:20px;"></div>`;
+}
+
+function toggleSel(key){if(selected.has(key))selected.delete(key);else selected.add(key);renderCustList();}
+
+function sendToSelected(){
+  const m=getMerged();
+  campaignTargets=Array.from(selected).map(k=>m[k]).filter(c=>(c?.phone||'').replace(/\D/g,'').length>=10);
+  if(!campaignTargets.length){toast('⚠️ No customers with valid phone numbers');return;}
+  openCompose('Selected Customers ('+campaignTargets.length+')','custom');
+}
+
+// CAMPAIGNS
+function renderCampaigns(){
+  const m=getMerged();
+  const all=Object.values(m);
+  const withPhone=all.filter(c=>(c.phone||'').replace(/\D/g,'').length===10);
+  const diamond=all.filter(c=>(c.totalSpent||0)>=200000);
+  const gold=all.filter(c=>(c.totalSpent||0)>=100000&&(c.totalSpent||0)<200000);
+  const withBday=Object.values(crmCusts).filter(c=>c.birthday&&c.phone);
+  const withAnni=Object.values(crmCusts).filter(c=>c.anniversary&&c.phone);
+  const el=document.getElementById('campaigns-content');
+  if(!el)return;
+  el.innerHTML=`
+    <div style="font-size:10px;color:var(--gold2);font-weight:700;letter-spacing:1.5px;margin-bottom:8px;">📣 BY OCCASION</div>
+    ${[
+      {key:'diwali',icon:'🪔',color:'#FF6B35',name:'Diwali / Dhanteras',sub:'Festival gold buying season',n:withPhone.length},
+      {key:'akshaya',icon:'🌟',color:'#B8960C',name:'Akshaya Tritiya',sub:'Most auspicious gold buying day',n:withPhone.length},
+      {key:'goldrate',icon:'📉',color:'#4CAF50',name:'Gold Rate Drop Alert',sub:'Notify — great time to buy',n:withPhone.length},
+      {key:'newstock',icon:'📦',color:'#2196F3',name:'New Stock Arrival',sub:'Share latest jewellery collection',n:withPhone.length},
+      {key:'birthday',icon:'🎂',color:'#E91E63',name:'Birthday Greetings',sub:'Send wishes to customers this month',n:withBday.length},
+      {key:'anniversary',icon:'💍',color:'#9C27B0',name:'Anniversary Wishes',sub:'Celebrate their special day',n:withAnni.length},
+      {key:'custom',icon:'✏️',color:'#607D8B',name:'Custom Campaign',sub:'Write your own message',n:withPhone.length},
+    ].map(o=>`
+      <div class="occ-card" onclick="launchCampaign('${o.key}')">
+        <div class="occ-icon" style="background:${o.color}22;border:1.5px solid ${o.color}44;">${o.icon}</div>
+        <div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:700;color:var(--dark);">${o.name}</div><div style="font-size:11px;color:var(--muted);margin-top:2px;">${o.sub}</div></div>
+        <div style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--gold-bg);color:var(--gold2);flex-shrink:0;">${o.n}</div>
+      </div>`).join('')}
+
+    <div style="font-size:10px;color:var(--gold2);font-weight:700;letter-spacing:1.5px;margin:14px 0 8px;">👑 BY LOYALTY TIER</div>
+    ${[
+      {label:'💎 Diamond (₹2L+)',arr:diamond,color:'#1A5276'},
+      {label:'🥇 Gold Customers (₹1–2L)',arr:gold,color:'#7D6608'},
+      {label:'📱 All with WhatsApp',arr:withPhone,color:'#075E54'},
+    ].map(g=>`
+      <div class="occ-card" onclick="launchToGroup(${JSON.stringify(g.arr.map(c=>({name:c.name,phone:c.phone}))).replace(/"/g,'&quot;')},'${g.label}')">
+        <div class="occ-icon" style="background:${g.color}22;font-size:14px;font-weight:900;color:${g.color};border:1.5px solid ${g.color}44;">${g.arr.length}</div>
+        <div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:700;color:var(--dark);">${g.label}</div><div style="font-size:11px;color:var(--muted);">Send exclusive message to this tier</div></div>
+        <div style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--gold-bg);color:var(--gold2);flex-shrink:0;">${g.arr.length}</div>
+      </div>`).join('')}
+    <div style="height:20px;"></div>`;
+}
+
+// UPCOMING EVENTS
+function getUpcoming(days=30){
+  const evs=[];
+  Object.values(crmCusts).forEach(c=>{
+    if(c.birthday){const d=daysUntil(c.birthday);if(d<=days)evs.push({name:c.name,phone:c.phone||'',type:'🎂 Birthday',days:d,msg:getTpl('birthday').replace(/{name}/gi,c.name||'Customer')});}
+    if(c.anniversary){const d=daysUntil(c.anniversary);if(d<=days)evs.push({name:c.name,phone:c.phone||'',type:'💍 Anniversary',days:d,msg:getTpl('anniversary').replace(/{name}/gi,c.name||'Customer')});}
+  });
+  // Fixed festival dates (update annually)
+  [{name:'Dhanteras',mm:'10',dd:'18',type:'🪔 Dhanteras'},{name:'Diwali',mm:'10',dd:'20',type:'🪔 Diwali'},{name:'Akshaya Tritiya 2026',mm:'04',dd:'28',type:'🌟 Akshaya Tritiya'}]
+    .forEach(f=>{const d=daysUntil(`${f.mm}-${f.dd}`);if(d<=days)evs.push({name:f.name,phone:'',type:f.type,days:d,isFestival:true,festKey:f.type.includes('Akshaya')?'akshaya':'diwali',msg:''});});
+  return evs.sort((a,b)=>a.days-b.days);
+}
+
+function renderUpcoming(){
+  const evs=getUpcoming(30);
+  const el=document.getElementById('upcoming-content');
+  if(!el)return;
+  if(evs.length===0){
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">🗓️</div><div class="empty-text">No birthdays or anniversaries in the next 30 days.</div><div style="font-size:12px;margin-top:8px;color:var(--muted);">Add birthday & anniversary dates to customers to see reminders here.</div></div>`;return;
+  }
+  const grp=(title,arr,col)=>arr.length===0?'':
+    `<div style="font-size:10px;font-weight:700;color:${col};letter-spacing:1.5px;margin:12px 0 7px;">${title}</div>`+
+    arr.map(ev=>`<div style="background:#fff;border:1px solid var(--border);border-radius:13px;padding:12px 14px;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:14px;font-weight:700;">${ev.name}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:1px;">${ev.type}${ev.phone?' · 📞 '+ev.phone:''}</div>
+        <div style="font-size:11px;font-weight:700;color:${col};margin-top:3px;">${ev.days===0?'⚡ TODAY!':ev.days===1?'Tomorrow':'In '+ev.days+' days'}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0;margin-left:8px;">
+        ${!ev.isFestival&&ev.phone?`<a href="${waLink(ev.phone,ev.msg)}" target="_blank" class="wa-btn" style="padding:8px 13px;font-size:12px;text-decoration:none;">💬 Wish</a>`:''}
+        ${ev.isFestival?`<button onclick="launchCampaign('${ev.festKey}')" style="background:var(--gold2);color:#fff;border:none;border-radius:9px;padding:8px 13px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">📣 Campaign</button>`:''}
+      </div>
+    </div>`).join('');
+  el.innerHTML=
+    grp('⚡ TODAY',evs.filter(e=>e.days===0),'var(--red)')+
+    grp('🌅 TOMORROW',evs.filter(e=>e.days===1),'#E67E22')+
+    grp('📅 THIS WEEK',evs.filter(e=>e.days>=2&&e.days<=7),'var(--gold2)')+
+    grp('🗓️ THIS MONTH',evs.filter(e=>e.days>7),'var(--muted)')+
+    `<div style="height:20px;"></div>`;
+}
+
+// CAMPAIGN LAUNCH
+function launchCampaign(key){
+  const m=getMerged();
+  const allPhone=Object.values(m).filter(c=>(c.phone||'').replace(/\D/g,'').length===10);
+  let targets=[],label='';
+  if(key==='birthday'){targets=Object.values(crmCusts).filter(c=>c.birthday&&(c.phone||'').replace(/\D/g,'').length>=10).map(c=>({name:c.name,phone:c.phone}));label='Birthday Customers';}
+  else if(key==='anniversary'){targets=Object.values(crmCusts).filter(c=>c.anniversary&&(c.phone||'').replace(/\D/g,'').length>=10).map(c=>({name:c.name,phone:c.phone}));label='Anniversary Customers';}
+  else{targets=allPhone.map(c=>({name:c.name,phone:c.phone}));label={diwali:'All — Diwali',akshaya:'All — Akshaya Tritiya',goldrate:'All — Gold Rate Alert',newstock:'All — New Stock',custom:'All Customers'}[key]||'All Customers';}
+  campaignTargets=targets;
+  openCompose(label,key);
+}
+function launchToGroup(arr,label){campaignTargets=arr.filter(c=>(c.phone||'').replace(/\D/g,'').length>=10);openCompose(label,'custom');}
+
+function openCompose(label,tplKey=''){
+  document.getElementById('compose-to-label').textContent=label;
+  document.getElementById('compose-count-label').textContent=campaignTargets.length+' customers with WhatsApp';
+  if(tplKey){document.getElementById('compose-tpl').value=tplKey;applyTpl();}
+  buildSendArea();
+  openModal('compose-modal');
+}
+function applyTpl(){
+  const key=document.getElementById('compose-tpl').value;
+  if(key){const ta=document.getElementById('compose-msg');if(ta)ta.value=getTpl(key);}
+  updatePreview();
+}
+function updatePreview(){
+  const msg=document.getElementById('compose-msg')?.value||'';
+  const p=document.getElementById('msg-preview');
+  if(p)p.textContent=msg.replace(/{name}/gi,'[Customer Name]')||'Your message will appear here...';
+}
+
+function buildSendArea(){
+  const el=document.getElementById('send-area');
+  if(!el)return;
+  const n=campaignTargets.length;
+  if(n===0){el.innerHTML=`<div style="text-align:center;padding:16px;font-size:13px;color:var(--muted);">No customers with phone numbers in this group.</div>`;return;}
+  if(n===1){
+    const c=campaignTargets[0];
+    el.innerHTML=`<a href="${waLink(c.phone,getMsg(c.name))}" target="_blank" class="wa-btn" style="width:100%;text-decoration:none;">💬 Send to ${c.name}</a>`;
+    return;
+  }
+  const prev=campaignTargets.slice(0,3).map(c=>c.name).join(', ')+(n>3?` +${n-3} more`:'');
+  el.innerHTML=`
+    <div style="background:var(--cream2);border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--mid);">📤 Sending to: <strong>${prev}</strong></div>
+    <button class="wa-btn" onclick="sendBulk(0)" style="width:100%;margin-bottom:8px;">💬 Send to All ${n} — One by One</button>
+    <div style="font-size:11px;color:var(--muted);text-align:center;line-height:1.5;">WhatsApp opens for each customer. Send → come back → tap Next.</div>`;
+}
+
+function sendBulk(idx){
+  if(idx>=campaignTargets.length){toast('✅ Done! All '+campaignTargets.length+' messages sent');closeModal('compose-modal');return;}
+  const c=campaignTargets[idx];
+  window.open(waLink(c.phone,getMsg(c.name)),'_blank');
+  const el=document.getElementById('send-area');
+  if(el){
+    const next=idx+1<campaignTargets.length?campaignTargets[idx+1].name:'(Done)';
+    el.innerHTML=`
+      <div style="background:#D5F5E3;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--green);font-weight:600;">✅ Opened ${idx+1}/${campaignTargets.length}: ${c.name}</div>
+      <button class="wa-btn" onclick="sendBulk(${idx+1})" style="width:100%;margin-bottom:8px;">💬 Next → ${next}</button>
+      <button onclick="toast('Stopped. ${idx+1} sent.');closeModal('compose-modal');" style="width:100%;background:none;border:1px solid var(--border);border-radius:10px;padding:11px;font-size:13px;cursor:pointer;color:var(--muted);font-family:'DM Sans',sans-serif;">Stop Here (${idx+1} sent)</button>`;
+  }
+}
+
+function getMsg(name){const msg=document.getElementById('compose-msg')?.value||'';return msg.replace(/{name}/gi,name||'Customer');}
+function waLink(phone,msg){const n=(phone||'').replace(/\D/g,'');const num=n.startsWith('91')?n:'91'+n;return 'https://wa.me/'+num+'?text='+encodeURIComponent(msg);}
+
+// TEMPLATES
+function getTpl(key){
+  const S='Gayatri Jewellers';
+  const t={
+    diwali:`🪔 *दीपावली की शुभकामनाएं!*
+
+नमस्ते {name} जी,
+
+✨ इस धनतेरस और दीपावली पर ${S} आपको और आपके परिवार को हार्दिक शुभकामनाएं देता है!
+
+🌟 इस शुभ अवसर पर सोने-चांदी की खरीदारी के लिए हमसे मिलें।
+BIS Hallmarked Certified | पारदर्शी मूल्य | Latest Designs
+
+💛 शुभ दीपावली!
+_${S}_ 🏅`,
+    akshaya:`🌟 *अक्षय तृतीया की शुभकामनाएं!*
+
+नमस्ते {name} जी,
+
+आज अक्षय तृतीया है — सोना खरीदने का सबसे शुभ दिन! 🪙
+
+इस पर्व पर की गई खरीदारी अक्षय (कभी न खत्म होने वाली) मानी जाती है।
+
+✅ BIS Hallmarked ज्वेलरी
+✅ पारदर्शी मूल्य
+✅ 22KT | 18KT | 14KT
+
+आज ही ${S} में आएं! 🏅
+_${S}_`,
+    birthday:`🎂 *Happy Birthday, {name} जी!*
+
+${S} की ओर से आपको जन्मदिन की ढेर सारी शुभकामनाएं! 🎉
+
+आपका यह खास दिन खुशियों और प्यार से भरा हो। 💛
+
+इस विशेष दिन पर हमारी दुकान पर आएं — आपके लिए एक खास surprise है! 🎁
+
+_${S}_ 🏅`,
+    anniversary:`💍 *शादी की सालगिरह मुबारक, {name} जी!*
+
+${S} की ओर से आपको और आपकी जीवनसाथी को सालगिरह की बहुत-बहुत बधाई! 💕
+
+इस खास दिन को और यादगार बनाइए — अपनी प्रिय साथी को सुंदर ज्वेलरी का तोहफा दें। 💛
+
+_${S}_ 🏅`,
+    newstock:`✨ *नया Collection आ गया!*
+
+नमस्ते {name} जी,
+
+${S} में बिल्कुल नई ज्वेलरी आ गई है! 📦
+
+💍 Rings | 📿 Necklaces | 🔗 Bracelets
+✨ Earrings | 🔄 Bangles | 👑 Sets
+
+✅ BIS Hallmarked | Transparent Pricing
+
+जल्दी आएं — नया stock जल्दी जाता है! 🏃
+
+_${S}_ 🏅`,
+    goldrate:`📉 *Gold Rate Drop — अभी खरीदें!*
+
+नमस्ते {name} जी,
+
+आज सोने का भाव कम हुआ है — यह खरीदारी का सुनहरा मौका है! 🪙
+
+✅ BIS Hallmarked ज्वेलरी
+✅ पारदर्शी मूल्य  
+✅ 22KT | 18KT | 14KT उपलब्ध
+
+आज ही ${S} में आएं और best rate पर सोना खरीदें!
+
+_${S}_ 💛`,
+    custom:`नमस्ते {name} जी,
+
+[अपना संदेश यहाँ लिखें]
+
+_${S}_ 🏅`,
+  };
+  return t[key]||t.custom;
+}
+
+// ADD / EDIT CUSTOMER
+function openAddCust(key=null){
+  editKey=key;
+  document.getElementById('acm-title').textContent=key?'Edit Customer':'Add Customer';
+  const c=key?crmCusts[key]:{};
+  document.getElementById('ac-name').value=c.name||'';
+  document.getElementById('ac-phone').value=c.phone||'';
+  document.getElementById('ac-birthday').value=c.birthday||'';
+  document.getElementById('ac-anniversary').value=c.anniversary||'';
+  document.getElementById('ac-notes').value=c.notes||'';
+  openModal('acm');
+}
+async function saveCust(){
+  const name=document.getElementById('ac-name').value.trim();
+  const phone=document.getElementById('ac-phone').value.trim().replace(/\D/g,'');
+  if(!name){toast('⚠️ Enter customer name');return;}
+  if(!phone||phone.length<10){toast('⚠️ Enter valid 10-digit phone number');return;}
+  const data={name,phone,birthday:document.getElementById('ac-birthday').value||'',anniversary:document.getElementById('ac-anniversary').value||'',notes:document.getElementById('ac-notes').value.trim(),updatedAt:new Date().toISOString()};
+  if(editKey){
+    await window._set(window._ref(window._db,'crm_customers/'+editKey),{...crmCusts[editKey],...data});
+    toast('✅ Customer updated');
+  } else {
+    data.createdAt=new Date().toISOString();
+    await window._push(window._ref(window._db,'crm_customers'),data);
+    toast('✅ Customer added');
+  }
+  closeModal('acm');editKey=null;
+}
+
+// SYNC FROM GJ APP
+async function syncFromGJ(){
+  toast('🔄 Syncing from Gayatri Jewellers...');
+  const existing=new Set(Object.values(crmCusts).map(c=>(c.phone||'').replace(/\D/g,'')).filter(Boolean));
+  const batch={};
+  Object.values(gjSales).forEach(s=>{
+    const ph=(s.phone||'').replace(/\D/g,'');
+    if(!ph||ph.length<10||existing.has(ph)||batch[ph])return;
+    batch[ph]={name:s.customer||'Customer',phone:ph,birthday:'',anniversary:'',notes:'',createdAt:new Date().toISOString(),source:'gj_sync'};
+    existing.add(ph);
+  });
+  const count=Object.keys(batch).length;
+  if(count===0){toast('✅ Up to date — no new customers');return;}
+  await Promise.all(Object.values(batch).map(c=>window._push(window._ref(window._db,'crm_customers'),c)));
+  toast('✅ Synced '+count+' new customer'+(count!==1?'s':'')+' from GJ app!');
+}
+
+// INIT
+function showLoginScreen(){document.getElementById('loading').style.display='none';document.getElementById('login-screen').style.display='flex';}
+window.addEventListener('DOMContentLoaded',()=>{
+  const fb=setTimeout(showLoginScreen,3000);
+  if(window._firebaseReady){clearTimeout(fb);initFirebase();setTimeout(showLoginScreen,900);}
+  else document.addEventListener('firebase-ready',()=>{clearTimeout(fb);initFirebase();setTimeout(showLoginScreen,900);});
+});
+</script></body></html>
